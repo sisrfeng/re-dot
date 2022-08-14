@@ -3,50 +3,45 @@
 " Version:      1.2
 " GetLatestVimScripts: 2136 1 :AutoInstall: repeat.vim
 
-" Installation:
-" Place in either ~/.vim/plugin/repeat.vim (to load at start up) or
-" ~/.vim/autoload/repeat.vim (to load automatically as needed).
-"
-" License:
-" Copyright (c) Tim Pope.  Distributed under the same terms as Vim itself.
-" See :help license
-"
 " Developers:
 " Basic usage is as follows:
 "
 "   silent! call repeat#set("\<Plug>MappingToRepeatCommand",3)
 "
-" The first argument is the mapping that will be invoked when the |.| key is
-" pressed.  Typically, it will be the same as the mapping the user invoked.
-" This sequence will be stuffed into the input queue literally.  Thus you must
-" encode special keys by prefixing them with a backslash inside double quotes.
-"
-" The second argument is the default count.  This is the number that will be
-" prefixed to the mapping if no explicit numeric argument was given.  The
-" value of the v:count variable is usually correct and it will be used if the
-" second parameter is omitted.  If your mapping doesn't accept a numeric
-" argument and you never want to receive one, pass a value of -1.
-"
-" Make sure to call the repeat#set function _after_ making changes to the
-" file.
-"
-" For mappings that use a register and want the same register used on
-" repetition, use:
-"
-"   silent! call repeat#setreg("\<Plug>MappingToRepeatCommand", v:register)
-"
-" This function can (and probably needs to be) called before making changes to
-" the file (as those typically clear v:register).  Therefore, the call sequence
-" in your mapping will look like this:
-"
-"   nnoremap <silent> <Plug>MyMap
-"   \   :<C-U>execute 'silent! call repeat#setreg("\<lt>Plug>MyMap", v:register)'<Bar>
-"   \   call <SID>MyFunction(v:register, ...)<Bar>
-"   \   silent! call repeat#set("\<lt>Plug>MyMap")<CR>
+    "\ " The first argument is the mapping that will be invoked when the |.| key
+    "\ is pressed.
+    "\ Typically,
+    "\ it will be the same as the mapping the user invoked.
+    "\ This sequence will be stuffed into the input queue literally.
+    "\ Thus you must encode special keys by
+    "\ prefixing them with a ¿backslash¿ inside double ¿quotes¿.
+    "\ The second argument is the default count.
+    "\ This is the number that will be prefixed to the mapping
+    "\ if no explicit numeric argument was given.
+    "\ The value of the ¿v:count¿ variable is usually correct and
+    "\     it will be used if the second parameter is omitted.
+    "\ If your mapping doesn't accept a numeric argument and
+    "\ you never want to receive one,
+    "\     pass a value of -1.
 
-if exists("g:loaded_repeat") || &cp || v:version < 700
-    finish
-endif
+    "\ Make sure to call the repeat#set function _after_ making changes to the file.
+    "\ For mappings that use a register and
+    "\ want the same register used on repetition,
+    "\ use:
+    "\ "   silent! call repeat#setreg("\<Plug>MappingToRepeatCommand", v:register)
+    "\ This function can (and probably needs to be)
+    "\ called before making changes to the file
+    "\     (as those typically clear v:register).
+    "\ Therefore,
+    "\ the call sequence in your mapping will look like this:
+    "\ "
+    "\ "
+    "\ "   nnoremap <silent> <Plug>MyMap
+        "\ "   \   :<C-U>execute 'silent! call repeat#setreg("\<lt>Plug>MyMap", v:register)'<Bar>
+        "\ "   \   call <SID>MyFunction(v:register, ...)<Bar>
+        "\ "   \   silent! call repeat#set("\<lt>Plug>MyMap")<CR>
+
+if exists("g:loaded_repeat")   | finish  | endif
 let g:loaded_repeat = 1
 
 let g:repeat_tick = -1
@@ -54,38 +49,38 @@ let g:repeat_reg = ['', '']
 
 " Special function to avoid spurious repeats in a related, naturally repeating
 " mapping when your repeatable mapping doesn't increase b:changedtick.
-function! repeat#invalidate()
-    autocmd! repeat_custom_motion
+fun! repeat#invalidate()
+    au! repeat_custom_motion
     let g:repeat_tick = -1
-endfunction
+endf
 
-function! repeat#set(sequence,...)
+fun! repeat#set(sequence,...)
     let g:repeat_sequence = a:sequence
     let g:repeat_count = a:0 ? a:1 : v:count
     let g:repeat_tick = b:changedtick
-    augroup repeat_custom_motion
-        autocmd!
-        autocmd CursorMoved <buffer> let g:repeat_tick = b:changedtick | autocmd! repeat_custom_motion
-    augroup END
-endfunction
+    aug  repeat_custom_motion
+        au!
+        au CursorMoved <buffer> let g:repeat_tick = b:changedtick | autocmd! repeat_custom_motion
+    aug  END
+endf
 
-function! repeat#setreg(sequence,register)
+fun! repeat#setreg(sequence,register)
     let g:repeat_reg = [a:sequence, a:register]
-endfunction
+endf
 
 
-function! s:default_register()
+fun! s:default_register()
     let values = split(&clipboard, ',')
     if index(values, 'unnamedplus') != -1
         return '+'
     elseif index(values, 'unnamed') != -1
         return '*'
-    else
+    el
         return '"'
-    endif
-endfunction
+    en
+endf
 
-function! repeat#run(count)
+fun! repeat#run(count)
     let s:errmsg = ''
     try
         if g:repeat_tick == b:changedtick
@@ -100,10 +95,10 @@ function! repeat#run(count)
                     " This causes a re-evaluation of the expression on repeat, which
                     " is what we want.
                     let r = '"=' . getreg('=', 1) . "\<CR>"
-                else
+                el
                     let r = '"' . regname
-                endif
-            endif
+                en
+            en
 
             let c = g:repeat_count
             let s = g:repeat_sequence
@@ -113,58 +108,57 @@ function! repeat#run(count)
             elseif v:version <= 703
                 call feedkeys(r . cnt, 'n')
                 call feedkeys(s, '')
-            else
+            el
                 call feedkeys(s, 'i')
                 call feedkeys(r . cnt, 'ni')
-            endif
-        else
+            en
+        el
             if ((v:version == 703 && has('patch100')) || (v:version == 704 && !has('patch601')))
                 exe 'norm! '.(a:count ? a:count : '') . '.'
-            else
+            el
                 call feedkeys((a:count ? a:count : '') . '.', 'ni')
-            endif
-        endif
+            en
+        en
     catch /^Vim(normal):/
         let s:errmsg = v:errmsg
         return 0
     endtry
     return 1
-endfunction
-function! repeat#errmsg()
+endf
+fun! repeat#errmsg()
     return s:errmsg
-endfunction
+endf
 
-function! repeat#wrap(command,count)
+fun! repeat#wrap(command,count)
     let preserve = (g:repeat_tick == b:changedtick)
     call feedkeys((a:count ? a:count : '').a:command, 'n')
     exe (&foldopen =~# 'undo\|all' ? 'norm! zv' : '')
     if preserve
         let g:repeat_tick = b:changedtick
-    endif
-endfunction
+    en
+endf
 
-nnoremap <silent> <Plug>(RepeatDot)      :<C-U>if !repeat#run(v:count)<Bar>echoerr repeat#errmsg()<Bar>endif<CR>
-nnoremap <silent> <Plug>(RepeatUndo)     :<C-U>call repeat#wrap('u',v:count)<CR>
-nnoremap <silent> <Plug>(RepeatUndoLine) :<C-U>call repeat#wrap('U',v:count)<CR>
-nnoremap <silent> <Plug>(RepeatRedo)     :<C-U>call repeat#wrap("\<Lt>C-R>",v:count)<CR>
+nno  <silent> <Plug>(RepeatDot)      :<C-U>if !repeat#run(v:count)<Bar>echoerr repeat#errmsg()<Bar>endif<CR>
+nno  <silent> <Plug>(RepeatUndo)     :<C-U>call repeat#wrap('u',v:count)<CR>
+nno  <silent> <Plug>(RepeatUndoLine) :<C-U>call repeat#wrap('U',v:count)<CR>
+nno  <silent> <Plug>(RepeatRedo)     :<C-U>call repeat#wrap("\<Lt>C-R>",v:count)<CR>
 
 if !hasmapto('<Plug>(RepeatDot)', 'n')
     nmap . <Plug>(RepeatDot)
-endif
+en
 if !hasmapto('<Plug>(RepeatUndo)', 'n')
     nmap u <Plug>(RepeatUndo)
-endif
+en
 if maparg('U','n') ==# '' && !hasmapto('<Plug>(RepeatUndoLine)', 'n')
     nmap U <Plug>(RepeatUndoLine)
-endif
+en
 if !hasmapto('<Plug>(RepeatRedo)', 'n')
     nmap <C-R> <Plug>(RepeatRedo)
-endif
+en
 
-augroup repeatPlugin
-    autocmd!
-    autocmd BufLeave,BufWritePre,BufReadPre * let g:repeat_tick = (g:repeat_tick == b:changedtick || g:repeat_tick == 0) ? 0 : -1
-    autocmd BufEnter,BufWritePost * if g:repeat_tick == 0|let g:repeat_tick = b:changedtick|endif
-augroup END
+aug  repeatPlugin
+    au!
+    au BufLeave,BufWritePre,BufReadPre * let g:repeat_tick = (g:repeat_tick == b:changedtick || g:repeat_tick == 0) ? 0 : -1
+    au BufEnter,BufWritePost * if g:repeat_tick == 0|let g:repeat_tick = b:changedtick|endif
+aug  END
 
-" vim:set ft=vim et sw=4 sts=4:
